@@ -52,7 +52,7 @@ export default async function handler(req, res) {
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
           temperature: 0.4,
-          maxOutputTokens: 1024,
+          maxOutputTokens: 4096,
         }
       })
     })
@@ -65,21 +65,30 @@ export default async function handler(req, res) {
     const geminiData = await geminiRes.json()
     const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || ''
 
+    console.log('Gemini raw response:', rawText) // debug log
+    if (!rawText) {
+  throw new Error('Empty response from Gemini')
+}
     // Robustly strip markdown fences and clean the response
     let clean = rawText
-      .replace(/```json\s*/gi, '')
-      .replace(/```\s*/gi, '')
-      .trim()
+  .replace(/```json\s*/gi, '')
+  .replace(/```\s*/gi, '')
+  .trim()
 
     // Extract just the JSON object between first { and last }
     const firstBrace = clean.indexOf('{')
-    const lastBrace = clean.lastIndexOf('}')
-    if (firstBrace !== -1 && lastBrace !== -1) {
-      clean = clean.substring(firstBrace, lastBrace + 1)
-    }
+const lastBrace = clean.lastIndexOf('}')
 
-    const parsed = JSON.parse(clean)
-    return res.status(200).json(parsed)
+if (firstBrace === -1 || lastBrace === -1) {
+  console.error('No JSON object found in:', clean)
+  throw new Error('Invalid response format from Gemini')
+}
+
+clean = clean.substring(firstBrace, lastBrace + 1)
+console.log('Cleaned JSON:', clean) // debug log
+
+const parsed = JSON.parse(clean)
+return res.status(200).json(parsed)
 
   } catch (e) {
     if (e.message === 'Unauthorized') return res.status(401).json({ error: 'Unauthorized' })
