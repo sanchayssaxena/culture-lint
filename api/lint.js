@@ -32,11 +32,14 @@ Using Erin Meyer dimensions (Communicating, Evaluating, Persuading, Leading, Dec
 - Each suggestion: max 15 words
 - Rewrite: same length as original, culturally adapted for ${recipientNationality}
 
-Respond with only this JSON, no other text:
-{"intent":{"label":"INTENT_LABEL","reason":"reason sentence"},"risk":"RISK_LEVEL","flags":[{"dimension":"dimension name","issue":"issue sentence","suggestion":"suggestion sentence"}],"rewrite":"rewrite text"}
+Return a single compact JSON object on ONE LINE with no newlines inside string values:
+{"intent":{"label":"INTENT_LABEL","reason":"reason here"},"risk":"high","flags":[{"dimension":"name","issue":"issue here","suggestion":"suggestion here"}],"rewrite":"rewrite here"}
 
-Replace INTENT_LABEL with one of the labels above.
-Replace RISK_LEVEL with exactly one of: high, medium, low`
+Rules for the JSON:
+- INTENT_LABEL must be exactly one of: CRITICAL-ACTION, FEEDBACK-ONLY, QUESTION-ONLY, SUGGESTION, APPROVAL-REQUEST, ESCALATION, STATUS-UPDATE, FOLLOW-UP
+- risk must be exactly one of: high, medium, low
+- No newlines inside any string value
+- No markdown, no code fences, no extra text`
 }
 
 export default async function handler(req, res) {
@@ -73,24 +76,29 @@ export default async function handler(req, res) {
     const geminiData = await geminiRes.json()
     const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || ''
 
+    console.log('RAW GEMINI:', JSON.stringify(rawText))
+
     if (!rawText) throw new Error('Empty response from Gemini')
 
+    // Strip markdown fences
     let clean = rawText
       .replace(/```json\s*/gi, '')
       .replace(/```\s*/gi, '')
       .trim()
 
+    // Flatten all newlines to spaces
+    clean = clean.replace(/[\r\n]+/g, ' ').trim()
+
+    // Extract JSON object between first { and last }
     const firstBrace = clean.indexOf('{')
     const lastBrace = clean.lastIndexOf('}')
     if (firstBrace === -1 || lastBrace === -1) throw new Error('Invalid response format from Gemini')
     clean = clean.substring(firstBrace, lastBrace + 1)
+
+    console.log('CLEAN JSON:', clean)
 
     const parsed = JSON.parse(clean)
     return res.status(200).json(parsed)
 
   } catch (e) {
     if (e.message === 'Unauthorized') return res.status(401).json({ error: 'Unauthorized' })
-    console.error('lint error:', e)
-    res.status(500).json({ error: e.message })
-  }
-}
