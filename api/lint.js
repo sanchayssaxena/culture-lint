@@ -1,9 +1,10 @@
+
 import { requireAuth } from './_auth.js'
 
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent'
 
 function buildPrompt(message, senderNationality, recipientNationality, recipientName) {
-  return `You are an expert in cross-cultural business communication trained on Erin Meyer Culture Map framework.
+  const prompt = `You are an expert in cross-cultural business communication trained on Erin Meyer Culture Map framework.
 
 Sender nationality: ${senderNationality}
 Recipient name: ${recipientName}
@@ -13,33 +14,20 @@ Message to analyse:
 ${message}
 
 TASK 1 - INTENT CLASSIFICATION
-Pick exactly one intent label from this list:
-CRITICAL-ACTION
-FEEDBACK-ONLY
-QUESTION-ONLY
-SUGGESTION
-APPROVAL-REQUEST
-ESCALATION
-STATUS-UPDATE
-FOLLOW-UP
-
-Write one short reason sentence (max 12 words) explaining your choice.
+Pick exactly one intent label: CRITICAL-ACTION, FEEDBACK-ONLY, QUESTION-ONLY, SUGGESTION, APPROVAL-REQUEST, ESCALATION, STATUS-UPDATE, FOLLOW-UP
+Write one short reason sentence max 12 words.
 
 TASK 2 - CULTURAL LINT
-Using Erin Meyer dimensions (Communicating, Evaluating, Persuading, Leading, Deciding, Trusting, Disagreeing, Scheduling), find cultural mismatches between ${senderNationality} sender and ${recipientNationality} recipient.
-- Pick max 2 most important flags
-- Each issue: max 15 words
-- Each suggestion: max 15 words
-- Rewrite: same length as original, culturally adapted for ${recipientNationality}
+Using Erin Meyer dimensions find cultural mismatches between ${senderNationality} sender and ${recipientNationality} recipient.
+Max 2 flags. Each issue max 15 words. Each suggestion max 15 words.
+Rewrite same length as original adapted for ${recipientNationality}.
 
-Return a single compact JSON object on ONE LINE with no newlines inside string values:
-{"intent":{"label":"INTENT_LABEL","reason":"reason here"},"risk":"high","flags":[{"dimension":"name","issue":"issue here","suggestion":"suggestion here"}],"rewrite":"rewrite here"}
+Return only valid JSON no markdown no newlines inside strings:
+{"intent":{"label":"LABEL","reason":"reason"},"risk":"high","flags":[{"dimension":"name","issue":"issue","suggestion":"suggestion"}],"rewrite":"rewrite"}
 
-Rules for the JSON:
-- INTENT_LABEL must be exactly one of: CRITICAL-ACTION, FEEDBACK-ONLY, QUESTION-ONLY, SUGGESTION, APPROVAL-REQUEST, ESCALATION, STATUS-UPDATE, FOLLOW-UP
-- risk must be exactly one of: high, medium, low
-- No newlines inside any string value
-- No markdown, no code fences, no extra text`
+risk must be exactly: high or medium or low`
+
+  return prompt
 }
 
 export default async function handler(req, res) {
@@ -80,16 +68,12 @@ export default async function handler(req, res) {
 
     if (!rawText) throw new Error('Empty response from Gemini')
 
-    // Strip markdown fences
     let clean = rawText
       .replace(/```json\s*/gi, '')
       .replace(/```\s*/gi, '')
+      .replace(/[\r\n]+/g, ' ')
       .trim()
 
-    // Flatten all newlines to spaces
-    clean = clean.replace(/[\r\n]+/g, ' ').trim()
-
-    // Extract JSON object between first { and last }
     const firstBrace = clean.indexOf('{')
     const lastBrace = clean.lastIndexOf('}')
     if (firstBrace === -1 || lastBrace === -1) throw new Error('Invalid response format from Gemini')
@@ -102,3 +86,7 @@ export default async function handler(req, res) {
 
   } catch (e) {
     if (e.message === 'Unauthorized') return res.status(401).json({ error: 'Unauthorized' })
+    console.error('lint error:', e)
+    res.status(500).json({ error: e.message })
+  }
+}
