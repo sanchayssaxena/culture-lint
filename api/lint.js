@@ -14,17 +14,38 @@ Draft message to analyse:
 ${message}
 """
 
-Analyse this message for cultural mismatches using Erin Meyer's eight dimensions: Communicating, Evaluating, Persuading, Leading, Deciding, Trusting, Disagreeing, Scheduling.
+Perform two analyses:
+
+## ANALYSIS 1 — INTENT CLASSIFICATION
+Classify the primary intent of the message using exactly one of these labels:
+
+- CRITICAL-ACTION — Requires immediate operational execution within an SLA window
+- FEEDBACK-ONLY — Constructive performance or design commentary; does not block progress
+- QUESTION-ONLY — Seeking non-blocking clarification or background context
+- SUGGESTION — Optional optimization; left to the owner's discretion
+- APPROVAL-REQUEST — Seeking sign-off, green light, or formal endorsement
+- ESCALATION — Flagging a risk, blocker, or issue to a higher authority
+- STATUS-UPDATE — Informational progress report; no action required from recipient
+- FOLLOW-UP — Chasing a previous request or pending item
+
+Pick the single best fit. Also write one short sentence (max 12 words) explaining why.
+
+## ANALYSIS 2 — CULTURAL LINT
+Using Erin Meyer's eight cultural dimensions — Communicating, Evaluating, Persuading, Leading, Deciding, Trusting, Disagreeing, Scheduling — analyse for cultural mismatches between ${senderNationality} (sender) and ${recipientNationality} (recipient).
 
 Rules:
-- Maximum 2 flags only, pick the most important ones
-- Each issue: one short sentence (max 15 words)
-- Each suggestion: one short sentence (max 15 words)
-- Rewrite: keep it concise, same length as the original message
-- No markdown, no extra text
+- Maximum 2 flags, most important only
+- Each issue: one short sentence, max 15 words
+- Each suggestion: one short sentence, max 15 words
+- Rewrite: concise, same length as original message
+- No markdown, no extra text outside JSON
 
-Return ONLY this JSON:
+Return ONLY this JSON object:
 {
+  "intent": {
+    "label": "LABEL_HERE",
+    "reason": "One short sentence explaining the classification"
+  },
   "risk": "high" or "medium" or "low",
   "flags": [
     {
@@ -36,6 +57,7 @@ Return ONLY this JSON:
   "rewrite": "Concise culturally adapted message"
 }`
 }
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
@@ -56,7 +78,7 @@ export default async function handler(req, res) {
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
           temperature: 0.4,
-          maxOutputTokens: 4096,
+          maxOutputTokens: 2048,
         }
       })
     })
@@ -69,30 +91,22 @@ export default async function handler(req, res) {
     const geminiData = await geminiRes.json()
     const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || ''
 
-    console.log('Gemini raw response:', rawText) // debug log
-    if (!rawText) {
-  throw new Error('Empty response from Gemini')
-}
-    // Robustly strip markdown fences and clean the response
+    if (!rawText) throw new Error('Empty response from Gemini')
+
+    // Strip markdown fences
     let clean = rawText
-  .replace(/```json\s*/gi, '')
-  .replace(/```\s*/gi, '')
-  .trim()
+      .replace(/```json\s*/gi, '')
+      .replace(/```\s*/gi, '')
+      .trim()
 
-    // Extract just the JSON object between first { and last }
+    // Extract JSON object between first { and last }
     const firstBrace = clean.indexOf('{')
-const lastBrace = clean.lastIndexOf('}')
+    const lastBrace = clean.lastIndexOf('}')
+    if (firstBrace === -1 || lastBrace === -1) throw new Error('Invalid response format from Gemini')
+    clean = clean.substring(firstBrace, lastBrace + 1)
 
-if (firstBrace === -1 || lastBrace === -1) {
-  console.error('No JSON object found in:', clean)
-  throw new Error('Invalid response format from Gemini')
-}
-
-clean = clean.substring(firstBrace, lastBrace + 1)
-console.log('Cleaned JSON:', clean) // debug log
-
-const parsed = JSON.parse(clean)
-return res.status(200).json(parsed)
+    const parsed = JSON.parse(clean)
+    return res.status(200).json(parsed)
 
   } catch (e) {
     if (e.message === 'Unauthorized') return res.status(401).json({ error: 'Unauthorized' })

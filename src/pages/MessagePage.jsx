@@ -32,6 +32,32 @@ function FlagCard({ flag }) {
   )
 }
 
+function IntentBadge({ intent }) {
+  const colors = {
+    'CRITICAL-ACTION':  { bg: '#fff0f0', color: '#cc0000', border: '#ffcccc' },
+    'ESCALATION':       { bg: '#fff0f0', color: '#cc0000', border: '#ffcccc' },
+    'APPROVAL-REQUEST': { bg: '#fffbf0', color: '#996600', border: '#ffe699' },
+    'FOLLOW-UP':        { bg: '#fffbf0', color: '#996600', border: '#ffe699' },
+    'FEEDBACK-ONLY':    { bg: '#f0f4ff', color: '#003399', border: '#99aaee' },
+    'SUGGESTION':       { bg: '#f5e6ff', color: '#7B00C2', border: '#E8B4FF' },
+    'QUESTION-ONLY':    { bg: '#f0fff4', color: '#006600', border: '#99ddaa' },
+    'STATUS-UPDATE':    { bg: '#f2f2f2', color: '#333333', border: '#cccccc' },
+  }
+  const style = colors[intent?.label] || colors['STATUS-UPDATE']
+  return (
+    <div className="mb-4 px-5 py-3"
+      style={{ background: style.bg, border: `1px solid ${style.border}`, borderLeft: `3px solid ${style.color}` }}>
+      <div className="flex items-center gap-3">
+        <span className="text-xs font-bold tracking-widest uppercase px-2 py-0.5"
+          style={{ background: style.color, color: '#fff' }}>
+          {intent?.label}
+        </span>
+        <span className="text-sm" style={{ color: '#333' }}>{intent?.reason}</span>
+      </div>
+    </div>
+  )
+}
+
 export default function MessagePage() {
   const { getToken } = useAuth()
   const { user } = useUser()
@@ -141,6 +167,7 @@ export default function MessagePage() {
           Flags cultural mismatches before you send
         </p>
       </div>
+      
 
       {/* Sender identity card */}
       <div className="mb-4 px-5 py-3 flex items-center gap-4"
@@ -276,46 +303,54 @@ export default function MessagePage() {
 
       {/* Results */}
       {result && (
-        <div className="mt-6 space-y-4">
-          <div style={{ background: '#000', borderBottom: '3px solid #A100FF', padding: '12px 20px' }}
-            className="flex items-center justify-between">
-            <span className="text-xs font-bold tracking-widest uppercase text-white">Analysis Result</span>
-            <RiskBadge risk={result.risk} />
-          </div>
+  <div className="mt-6 space-y-4">
 
-          {result.flags?.length > 0 && (
-            <div className="space-y-3">
-              <p className="text-xs font-bold tracking-widest uppercase" style={{ color: '#666' }}>Issues Found</p>
-              {result.flags.map((flag, i) => <FlagCard key={i} flag={flag} />)}
-            </div>
-          )}
+    {/* Summary header */}
+    <div style={{ background: '#000', borderBottom: '3px solid #A100FF', padding: '12px 20px' }}
+      className="flex items-center justify-between">
+      <span className="text-xs font-bold tracking-widest uppercase text-white">Analysis Result</span>
+      <RiskBadge risk={result.risk} />
+    </div>
 
-          {result.rewrite && (
-            <div style={{ background: '#fff', border: '1px solid #E6E6E6' }}>
-              <div className="px-5 py-3 flex items-center justify-between"
-                style={{ background: '#F5E6FF', borderBottom: '2px solid #A100FF' }}>
-                <p className="text-xs font-bold tracking-widest uppercase" style={{ color: '#7B00C2' }}>
-                  ✦ Culturally Adapted Version
-                </p>
-                <button
-                  onClick={() => navigator.clipboard.writeText(result.rewrite)}
-                  className="text-xs font-bold tracking-widest uppercase px-3 py-1"
-                  style={{ border: '1px solid #7B00C2', background: '#fff', color: '#7B00C2', cursor: 'pointer' }}
-                  onMouseEnter={e => e.target.style.background = '#F5E6FF'}
-                  onMouseLeave={e => e.target.style.background = '#fff'}
-                >
-                  Copy
-                </button>
-              </div>
-              <div className="px-5 py-4">
-                <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: '#000' }}>
-                  {result.rewrite}
-                </p>
-              </div>
-            </div>
-          )}
+    {/* Intent badge */}
+    {result.intent && <IntentBadge intent={result.intent} />}
+
+    {/* Flags */}
+    {result.flags?.length > 0 && (
+      <div className="space-y-3">
+        <p className="text-xs font-bold tracking-widest uppercase" style={{ color: '#666' }}>Issues Found</p>
+        {result.flags.map((flag, i) => <FlagCard key={i} flag={flag} />)}
+      </div>
+    )}
+
+    {/* Rewrite */}
+    {result.rewrite && (
+      <div style={{ background: '#fff', border: '1px solid #E6E6E6' }}>
+        <div className="px-5 py-3 flex items-center justify-between"
+          style={{ background: '#F5E6FF', borderBottom: '2px solid #A100FF' }}>
+          <p className="text-xs font-bold tracking-widest uppercase" style={{ color: '#7B00C2' }}>
+            ✦ Culturally Adapted Version
+          </p>
+          <button
+            onClick={() => navigator.clipboard.writeText(result.rewrite)}
+            className="text-xs font-bold tracking-widest uppercase px-3 py-1"
+            style={{ border: '1px solid #7B00C2', background: '#fff', color: '#7B00C2', cursor: 'pointer' }}
+            onMouseEnter={e => e.target.style.background = '#F5E6FF'}
+            onMouseLeave={e => e.target.style.background = '#fff'}
+          >
+            Copy
+          </button>
         </div>
-      )}
+        <div className="px-5 py-4">
+          <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: '#000' }}>
+            {result.rewrite}
+          </p>
+        </div>
+      </div>
+    )}
+
+  </div>
+)}
     </div>
   )
 }
