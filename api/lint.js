@@ -14,24 +14,28 @@ Draft message to analyse:
 ${message}
 """
 
-Using Erin Meyer's eight cultural dimensions — Communicating (low-context vs high-context), Evaluating (direct vs indirect negative feedback), Persuading (principles-first vs applications-first), Leading (egalitarian vs hierarchical), Deciding (consensual vs top-down), Trusting (task-based vs relationship-based), Disagreeing (confrontational vs avoids confrontation), and Scheduling (linear-time vs flexible-time) — analyse this message for cultural mismatches between the sender (${senderNationality}) and recipient (${recipientNationality}) cultures.
+Analyse this message for cultural mismatches using Erin Meyer's eight dimensions: Communicating, Evaluating, Persuading, Leading, Deciding, Trusting, Disagreeing, Scheduling.
 
-Return ONLY a valid JSON object with this exact structure (no markdown fences, no extra text):
+Rules:
+- Maximum 2 flags only, pick the most important ones
+- Each issue: one short sentence (max 15 words)
+- Each suggestion: one short sentence (max 15 words)
+- Rewrite: keep it concise, same length as the original message
+- No markdown, no extra text
+
+Return ONLY this JSON:
 {
   "risk": "high" or "medium" or "low",
   "flags": [
     {
-      "dimension": "Name of the Meyer dimension",
-      "issue": "One clear sentence describing the cultural friction",
-      "suggestion": "One concrete sentence on how to fix it"
+      "dimension": "Dimension name",
+      "issue": "Short issue sentence",
+      "suggestion": "Short fix sentence"
     }
   ],
-  "rewrite": "A complete, culturally adapted rewrite of the message appropriate for ${recipientNationality} business culture"
+  "rewrite": "Concise culturally adapted message"
+}`
 }
-
-Return 1 to 3 flags. If no issues exist, return risk low with one flag noting what works well, and a lightly polished rewrite. Do not include any markdown formatting, code fences, or extra text outside the JSON object.`
-}
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
