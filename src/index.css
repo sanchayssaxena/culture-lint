@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  --acc-purple: #A100FF;
+  --acc-purple-dark: #7B00C2;
+  --acc-purple-light: #E8B4FF;
+  --acc-purple-faint: #F5E6FF;
+  --acc-black: #000000;
+  --acc-gray-1: #F2F2F2;
+  --acc-gray-2: #E6E6E6;
+  --acc-gray-3: #CCCCCC;
+  --acc-gray-4: #999999;
+  --acc-gray-5: #666666;
+  --acc-gray-6: #333333;
+}
+
+body {
+  margin: 0;
+  background: #F2F2F2;
+  color: #000000;
+  font-family: 'Barlow', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  font-size: 15px;
+}
+
+/* Accenture uses NO rounded corners — override any rounding */
+button, input, select, textarea {
+  border-radius: 0 !important;
+}
+
+/* Accenture purple focus ring */
+input:focus, select:focus, textarea:focus {
+  outline: 2px solid var(--acc-purple) !important;
+  outline-offset: 0;
+}
+
+/* Clerk modal */
+.cl-rootBox { z-index: 9999; }
+
+/* Accenture-style horizontal rule */
+.acc-rule {
+  border: 0;
+  border-top: 3px solid var(--acc-purple);
+  margin: 0;
+}
+
+/* Purple underline accent on headings */
+.acc-heading-accent {
+  display: inline-block;
+  border-bottom: 3px solid var(--acc-purple);
+  padding-bottom: 4px;
+}
