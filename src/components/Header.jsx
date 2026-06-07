@@ -10,7 +10,7 @@ export default function Header({ tab, setTab }) {
 
         {/* Accenture-style logo: wordmark + > symbol */}
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-white font-bold text-lg tracking-tight">CultureLint</span>
+          <span className="text-white font-bold text-lg tracking-tight">CultureLinter</span>
           <span className="font-bold text-lg" style={{ color: '#A100FF' }}>{'>'}</span>
         </div>
 
