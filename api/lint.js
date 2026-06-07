@@ -1,6 +1,6 @@
 import { requireAuth } from './_auth.js'
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent'
 
 function buildPrompt(message, senderNationality, recipientNationality, recipientName) {
   return `You are an expert in cross-cultural business communication trained on Erin Meyer's Culture Map framework.
