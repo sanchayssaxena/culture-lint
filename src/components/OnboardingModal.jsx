@@ -27,28 +27,32 @@ export default function OnboardingModal({ onComplete }) {
       })
 
       // Step 2: Sync to Neon DB
-      try {
-        const token = await getToken()
-        const res = await fetch('/api/onboard', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            nationality,
-            name: fullName,
-            employeeId: employeeId.trim(),
-          }),
-        })
-        if (!res.ok) {
-          const data = await res.json()
-          console.warn('DB sync error:', data)
-        }
-      } catch (apiErr) {
-        console.warn('DB sync failed, continuing:', apiErr)
-      }
-
+      // Step 2: Sync to Neon DB
+try {
+  const token = await getToken()
+  const res = await fetch('/api/onboard', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      nationality,
+      name: fullName,
+      employeeId: employeeId.trim(),
+    }),
+  })
+  const data = await res.json()
+  if (!res.ok) {
+    // Show error instead of silently continuing
+    throw new Error(data.error || 'DB sync failed')
+  }
+} catch (apiErr) {
+  console.error('DB sync failed:', apiErr)
+  setError('Failed to save profile: ' + apiErr.message)
+  setSaving(false)
+  return // Stop here so user can retry
+}
       // Step 3: Reload user session
       await user.reload()
       onComplete()
