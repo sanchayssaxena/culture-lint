@@ -7,7 +7,18 @@ export async function requireAuth(req) {
   const token = authHeader.replace('Bearer ', '').trim()
   if (!token) throw new Error('Unauthorized')
 
-  const payload = await clerk.verifyToken(token)
-  if (!payload?.sub) throw new Error('Unauthorized')
-  return payload
+  try {
+    const payload = await clerk.verifyToken(token, {
+      authorizedParties: [
+        'https://culture-lint.vercel.app',
+        'http://localhost:5173',
+        'http://localhost:3000',
+      ],
+    })
+    if (!payload?.sub) throw new Error('Unauthorized')
+    return payload
+  } catch (e) {
+    console.error('Auth error:', e.message)
+    throw new Error('Unauthorized')
+  }
 }
