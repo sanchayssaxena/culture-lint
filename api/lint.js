@@ -72,7 +72,7 @@ export default async function handler(req, res) {
     return res.status(200).json(parsed)
   } catch (e) {
     if (e.message === 'Unauthorized') return res.status(401).json({ error: 'Unauthorized' })
-    console.error(e)
+    console.error('lint error:', e)
     res.status(500).json({ error: e.message })
   }
 }
