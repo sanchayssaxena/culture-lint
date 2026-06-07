@@ -40,13 +40,13 @@ Rules:
 - Rewrite: concise, same length as original message
 - No markdown, no extra text outside JSON
 
-Return ONLY this JSON object:
+Return ONLY this JSON object (risk must be exactly one of: high, medium, low):
 {
   "intent": {
     "label": "LABEL_HERE",
     "reason": "One short sentence explaining the classification"
   },
-  "risk": "high" or "medium" or "low",
+  "risk": "high",
   "flags": [
     {
       "dimension": "Dimension name",
