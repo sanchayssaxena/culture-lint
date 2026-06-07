@@ -3,59 +3,40 @@ import { requireAuth } from './_auth.js'
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent'
 
 function buildPrompt(message, senderNationality, recipientNationality, recipientName) {
-  return `You are an expert in cross-cultural business communication trained on Erin Meyer's Culture Map framework.
+  return `You are an expert in cross-cultural business communication trained on Erin Meyer Culture Map framework.
 
-Sender's nationality: ${senderNationality}
-Recipient's name: ${recipientName}
-Recipient's nationality: ${recipientNationality}
+Sender nationality: ${senderNationality}
+Recipient name: ${recipientName}
+Recipient nationality: ${recipientNationality}
 
-Draft message to analyse:
-"""
+Message to analyse:
 ${message}
-"""
 
-Perform two analyses:
+TASK 1 - INTENT CLASSIFICATION
+Pick exactly one intent label from this list:
+CRITICAL-ACTION
+FEEDBACK-ONLY
+QUESTION-ONLY
+SUGGESTION
+APPROVAL-REQUEST
+ESCALATION
+STATUS-UPDATE
+FOLLOW-UP
 
-## ANALYSIS 1 — INTENT CLASSIFICATION
-Classify the primary intent of the message using exactly one of these labels:
+Write one short reason sentence (max 12 words) explaining your choice.
 
-- CRITICAL-ACTION — Requires immediate operational execution within an SLA window
-- FEEDBACK-ONLY — Constructive performance or design commentary; does not block progress
-- QUESTION-ONLY — Seeking non-blocking clarification or background context
-- SUGGESTION — Optional optimization; left to the owner's discretion
-- APPROVAL-REQUEST — Seeking sign-off, green light, or formal endorsement
-- ESCALATION — Flagging a risk, blocker, or issue to a higher authority
-- STATUS-UPDATE — Informational progress report; no action required from recipient
-- FOLLOW-UP — Chasing a previous request or pending item
+TASK 2 - CULTURAL LINT
+Using Erin Meyer dimensions (Communicating, Evaluating, Persuading, Leading, Deciding, Trusting, Disagreeing, Scheduling), find cultural mismatches between ${senderNationality} sender and ${recipientNationality} recipient.
+- Pick max 2 most important flags
+- Each issue: max 15 words
+- Each suggestion: max 15 words
+- Rewrite: same length as original, culturally adapted for ${recipientNationality}
 
-Pick the single best fit. Also write one short sentence (max 12 words) explaining why.
+Respond with only this JSON, no other text:
+{"intent":{"label":"INTENT_LABEL","reason":"reason sentence"},"risk":"RISK_LEVEL","flags":[{"dimension":"dimension name","issue":"issue sentence","suggestion":"suggestion sentence"}],"rewrite":"rewrite text"}
 
-## ANALYSIS 2 — CULTURAL LINT
-Using Erin Meyer's eight cultural dimensions — Communicating, Evaluating, Persuading, Leading, Deciding, Trusting, Disagreeing, Scheduling — analyse for cultural mismatches between ${senderNationality} (sender) and ${recipientNationality} (recipient).
-
-Rules:
-- Maximum 2 flags, most important only
-- Each issue: one short sentence, max 15 words
-- Each suggestion: one short sentence, max 15 words
-- Rewrite: concise, same length as original message
-- No markdown, no extra text outside JSON
-
-Return ONLY this JSON object (risk must be exactly one of: high, medium, low):
-{
-  "intent": {
-    "label": "LABEL_HERE",
-    "reason": "One short sentence explaining the classification"
-  },
-  "risk": "high",
-  "flags": [
-    {
-      "dimension": "Dimension name",
-      "issue": "Short issue sentence",
-      "suggestion": "Short fix sentence"
-    }
-  ],
-  "rewrite": "Concise culturally adapted message"
-}`
+Replace INTENT_LABEL with one of the labels above.
+Replace RISK_LEVEL with exactly one of: high, medium, low`
 }
 
 export default async function handler(req, res) {
@@ -77,8 +58,9 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
-          temperature: 0.4,
+          temperature: 0.2,
           maxOutputTokens: 2048,
+          responseMimeType: 'application/json',
         }
       })
     })
@@ -93,13 +75,11 @@ export default async function handler(req, res) {
 
     if (!rawText) throw new Error('Empty response from Gemini')
 
-    // Strip markdown fences
     let clean = rawText
       .replace(/```json\s*/gi, '')
       .replace(/```\s*/gi, '')
       .trim()
 
-    // Extract JSON object between first { and last }
     const firstBrace = clean.indexOf('{')
     const lastBrace = clean.lastIndexOf('}')
     if (firstBrace === -1 || lastBrace === -1) throw new Error('Invalid response format from Gemini')
