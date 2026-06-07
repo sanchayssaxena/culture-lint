@@ -18,7 +18,7 @@ Using Erin Meyer's eight cultural dimensions — Communicating (low-context vs h
 
 Return ONLY a valid JSON object with this exact structure (no markdown fences, no extra text):
 {
-  "risk": "high" | "medium" | "low",
+  "risk": "high" or "medium" or "low",
   "flags": [
     {
       "dimension": "Name of the Meyer dimension",
@@ -29,7 +29,7 @@ Return ONLY a valid JSON object with this exact structure (no markdown fences, n
   "rewrite": "A complete, culturally adapted rewrite of the message appropriate for ${recipientNationality} business culture"
 }
 
-Return 1–3 flags. If no issues exist, return risk "low" with one flag noting what works well, and a lightly polished rewrite.`
+Return 1 to 3 flags. If no issues exist, return risk low with one flag noting what works well, and a lightly polished rewrite. Do not include any markdown formatting, code fences, or extra text outside the JSON object.`
 }
 
 export default async function handler(req, res) {
@@ -65,11 +65,22 @@ export default async function handler(req, res) {
     const geminiData = await geminiRes.json()
     const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || ''
 
-    // Strip any accidental markdown fences
-    const clean = rawText.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim()
-    const parsed = JSON.parse(clean)
+    // Robustly strip markdown fences and clean the response
+    let clean = rawText
+      .replace(/```json\s*/gi, '')
+      .replace(/```\s*/gi, '')
+      .trim()
 
+    // Extract just the JSON object between first { and last }
+    const firstBrace = clean.indexOf('{')
+    const lastBrace = clean.lastIndexOf('}')
+    if (firstBrace !== -1 && lastBrace !== -1) {
+      clean = clean.substring(firstBrace, lastBrace + 1)
+    }
+
+    const parsed = JSON.parse(clean)
     return res.status(200).json(parsed)
+
   } catch (e) {
     if (e.message === 'Unauthorized') return res.status(401).json({ error: 'Unauthorized' })
     console.error('lint error:', e)
