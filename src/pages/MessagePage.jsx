@@ -60,7 +60,7 @@ export default function MessagePage() {
         setSender(data)
       } catch (_) {
         // fallback to Clerk metadata
-        setSender({ nationality: user?.publicMetadata?.nationality || 'American', name: user?.fullName })
+        setSender({ nationality: user?.unsafeMetadata?.nationality || 'American', name: user?.fullName })
       } finally {
         setSenderLoading(false)
       }

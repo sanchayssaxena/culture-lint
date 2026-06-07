@@ -10,7 +10,7 @@ function AppShell() {
   const [tab, setTab] = useState('employees')
 
   // Show onboarding if nationality hasn't been set yet
-  const needsOnboarding = isLoaded && !user?.publicMetadata?.nationality
+  const needsOnboarding = isLoaded && !user?.unsafeMetadata?.nationality
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#F2F2F2' }}>
