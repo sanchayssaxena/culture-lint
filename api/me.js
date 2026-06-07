@@ -9,15 +9,14 @@ export default async function handler(req, res) {
     await initDb()
     const sql = getDb()
 
-    const userId = payload.sub
-    const employeeId = `USR-${userId.slice(-6).toUpperCase()}`
+    const clerkUserId = payload.sub
 
     const [row] = await sql`
-      SELECT * FROM employees WHERE employee_id = ${employeeId} LIMIT 1
+      SELECT * FROM employees WHERE clerk_user_id = ${clerkUserId} LIMIT 1
     `
 
     return res.status(200).json({
-      employeeId,
+      employeeId: row?.employee_id || null,
       name: row?.name || null,
       nationality: row?.nationality || null,
     })
