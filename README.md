@@ -1,4 +1,4 @@
-# CultureLint
+# CultureLinter
 
 AI-powered cross-cultural communication assistant. Flags tone and framing mismatches before you hit Send, using Erin Meyer's Culture Map framework via Gemini AI.
 

@@ -74,7 +74,7 @@ try {
         {/* Header */}
         <div className="px-6 py-5" style={{ background: '#000', borderBottom: '3px solid #A100FF' }}>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-white font-bold text-lg tracking-tight">CultureLint</span>
+            <span className="text-white font-bold text-lg tracking-tight">CultureLinter</span>
             <span className="font-bold text-lg" style={{ color: '#A100FF' }}>{'>'}</span>
           </div>
           <p className="text-xs tracking-widest uppercase" style={{ color: '#999' }}>

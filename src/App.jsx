@@ -37,7 +37,7 @@ export default function App() {
         <div className="min-h-screen flex flex-col items-center justify-center bg-black gap-10 px-4">
           <div className="text-center">
             <div className="flex items-center gap-3 justify-center mb-2">
-              <span className="text-4xl font-bold text-white tracking-tight">CultureLint</span>
+              <span className="text-4xl font-bold text-white tracking-tight">CultureLinter</span>
               <span className="text-4xl font-bold" style={{ color: '#A100FF' }}>{'>'}</span>
             </div>
             <p className="text-sm mt-2" style={{ color: '#999999' }}>
